@@ -1,0 +1,37 @@
+0: position 0 base
+1: position 1 base
+2: position 2 base
+3: position 3 base
+4: position 4 base
+5: position 5 base
+6: position 6 base
+7: position 7 base
+8: position 8 base
+
+9: vertical player = 0
+10: vertical player = 1
+11: vertical player = 2
+12: vertical opponent = 0
+13: vertical opponent = 1
+14: vertical opponent = 2
+
+15: diagonal_up player = 0
+16: diagonal_up player = 1
+17: diagonal_up player = 2
+18: diagonal_up opponent = 0
+19: diagonal_up opponent = 1
+20: diagonal_up opponent = 2
+
+21: horizontal player = 0
+22: horizontal player = 1
+23: horizontal player = 2
+24: horizontal opponent = 0
+25: horizontal opponent = 1
+26: horizontal opponent = 2
+
+27: diagonal_down player = 0
+28: diagonal_down player = 1
+29: diagonal_down player = 2
+30: diagonal_down opponent = 0
+31: diagonal_down opponent = 1
+32: diagonal_down opponent = 2
