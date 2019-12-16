@@ -5,7 +5,9 @@ from bot import Bot
 import random
 import pickle
 import time
+from datetime import datetime
 import math
+from multiprocessing import Pool
 
 
 class Player:
@@ -59,10 +61,18 @@ def print_winner(winner):
         print("X wins!")
 
 
+def play_process(players):
+    result = run_game(players[0], players[1])
+    if result == None:
+        result = random.getrandbits(1)
+    return players[result]
+
+
 def evolve():
     population_size = 200
     generation_count = 10000
     mutation_rate = 0.05
+    pool = Pool(4)
 
     population = []
     for _ in range(population_size):
@@ -72,15 +82,12 @@ def evolve():
     game_total = population_size * generation_count * 0.5
     start_time = time.time()
     for _ in range(generation_count):
-        winners = []
+        matchups = []
         while len(population) >= 2:
-            result = run_game(population[0], population[1])
-            if result == None:
-                result = random.getrandbits(1)
-            winners.append(population[result])
+            matchups.append([population[0], population[1]])
             population = population[2:]
-            game_count += 1
-            
+
+        winners = pool.map(play_process, matchups)
 
         population = []
         while len(population) < population_size:
@@ -89,11 +96,14 @@ def evolve():
             child.genome.mutate(mutation_rate)
             population.append(child)
 
+        game_count += population_size / 2
         game_rate = (time.time() - start_time) / game_count
         percent = round((game_count / game_total) * 100, 3)
         etr = round((game_total - game_count) * game_rate)
-        fill = " " * (7 - len(str(percent)))
-        print("  " + str(percent) + "%" + fill + "- " + format_duration(etr) + "s ETR       ", end="\r")
+        eta = datetime.fromtimestamp(
+            time.time() + etr).strftime("%I:%M %p %a %b %d")
+        print("  " + str(percent) + "%" + " - (ETR=" +
+              format_duration(etr) + "s) - (ETA=" + eta + ")       ", end="\r")
 
     pickle.dump(population, open("bots.p", "wb"))
     print()
