@@ -71,7 +71,7 @@ def evolve():
     population_size = 200
     generation_count = 10000
     mutation_rate = 0.05
-    pool_size = 4
+    pool = Pool(4)
 
     population = []
     for _ in range(population_size):
@@ -86,7 +86,6 @@ def evolve():
             matchups.append([population[0], population[1]])
             population = population[2:]
 
-        pool = Pool(pool_size)
         winners = pool.map(play_process, matchups)
 
         population = []
