@@ -17,12 +17,18 @@ class Gene(Enum):
 
 class Genome:
     """Represents a series of genes."""
-    genes = ()
+    genes = []
 
-    def __init__(self, source=None, gametes=None, random_len=None, text=None):
-        self.genes = ()
-        if source != None:
-            self.genes = source
+    def __init__(self, text=None, gametes=None, random_len=None):
+        self.genes = []
+        if text != None:
+            text_lookup = {
+                "aa": Gene.HOMOZYGOUS_RECESSIVE,
+                "Aa": Gene.HETEROZYGOUS,
+                "AA": Gene.HOMOZYGOUS_DOMINANT
+            }
+            for genetext in text.split("-"):
+                self.genes.append(text_lookup[genetext])
             return
         if gametes != None:
             gene_lookup = {
@@ -32,22 +38,25 @@ class Genome:
                 (Allele.DOMINANT, Allele.DOMINANT): Gene.HOMOZYGOUS_DOMINANT,
             }
             for i in range(len(gametes[0])):
-                self.genes += (gene_lookup[(gametes[0][i], gametes[1][i])],)
+                self.genes.append(gene_lookup[(gametes[0][i], gametes[1][i])])
             return
         if random_len != None:
             for i in range(random_len):
-                self.genes += (random.choice(list(Gene)),)
+                self.genes.append(self.__random_gene())
             return
-        if text != None:
-            text_lookup = {
-                "aa": Gene.HOMOZYGOUS_RECESSIVE,
-                "Aa": Gene.HETEROZYGOUS,
-                "AA": Gene.HOMOZYGOUS_DOMINANT
-            }
-            self.genes = ()
-            for genetext in text.split("-"):
-                self.genes += (text_lookup[genetext],)
-            return
+
+    def __random_gene(self):
+        """Selects a random gene based on accurate weights."""
+        return random.choices(population=list(Gene), weights=[0.25, 0.5, 0.25])[0]
+
+    def mutate(self, rate):
+        """Randomly replaces genes based on mutation rate."""
+        for i in range(len(self.genes)):
+            if random.random() < rate:
+                choice = self.__random_gene()
+                while choice == self.genes[i]:
+                    choice = self.__random_gene()
+                self.genes[i] = choice
 
     def text(self):
         """Provides a text representation of the genome."""
@@ -58,7 +67,7 @@ class Genome:
 
     def gamete(self):
         """Provides a series of alleles from the genome."""
-        gamete = ()
+        gamete = []
         for gene in self.genes:
-            gamete += (gene.value[random.getrandbits(1)],)
+            gamete.append(gene.value[random.getrandbits(1)])
         return gamete
