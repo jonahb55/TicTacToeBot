@@ -47,7 +47,7 @@ class Genome:
 
     def __random_gene(self):
         """Selects a random gene based on accurate weights."""
-        return random.choices(population=list(Gene), weights=[0.25, 0.5, 0.25])[0]
+        return random.choice([Gene.HOMOZYGOUS_RECESSIVE, Gene.HETEROZYGOUS, Gene.HETEROZYGOUS, Gene.HOMOZYGOUS_DOMINANT])
 
     def mutate(self, rate):
         """Randomly replaces genes based on mutation rate."""

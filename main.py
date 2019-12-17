@@ -60,20 +60,23 @@ def print_winner(winner):
     elif winner == 1:
         print("X wins!")
 
-
 def play_process(players):
-    result = run_game(players[0], players[1])
-    if result == None:
-        result = random.getrandbits(1)
-    return players[result]
+        result = run_game(players[0], players[1])
+        if result == None:
+            result = random.getrandbits(1)
+        return players[result]
 
+def reproduce_process(parents):
+    child = Bot(parents=parents)
+    child.genome.mutate(mutation_rate)
+    return child
+
+population_size = 200
+generation_count = 35000
+mutation_rate = 0.05
+pool = Pool(128)
 
 def evolve():
-    population_size = 200
-    generation_count = 10000
-    mutation_rate = 0.05
-    pool = Pool(4)
-
     population = []
     for _ in range(population_size):
         population.append(Bot())
@@ -88,13 +91,12 @@ def evolve():
             population = population[2:]
 
         winners = pool.map(play_process, matchups)
+        
+        parents = []
+        for _ in range(population_size):
+            parents.append((random.choice(winners), random.choice(winners)))
 
-        population = []
-        while len(population) < population_size:
-            child = Bot(parents=(random.choice(
-                winners), random.choice(winners)))
-            child.genome.mutate(mutation_rate)
-            population.append(child)
+        population = pool.map(reproduce_process, parents)
 
         game_count += population_size / 2
         game_rate = (time.time() - start_time) / game_count
