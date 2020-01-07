@@ -196,7 +196,6 @@ def save_result(results):
     rating_csv.close()
     sizes_csv.close()
 
-save_result(trial("test", generation_count=10, population_sizes=[50], mutation_rate=0.05, sexual=True, sample_rate=0.2))
 save_result(trial("control", generation_count=30000, population_sizes=[200], mutation_rate=0.05, sexual=True, sample_rate=0.2))
 save_result(trial("no_mutation", generation_count=30000, population_sizes=[200], mutation_rate=0, sexual=True, sample_rate=0.2))
 save_result(trial("asexual", generation_count=30000, population_sizes=[200], mutation_rate=0.05, sexual=False, sample_rate=0.2))
