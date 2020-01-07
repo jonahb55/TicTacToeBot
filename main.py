@@ -112,8 +112,10 @@ def trial(title, generation_count, population_sizes, mutation_rate, sexual, samp
 
         generation_ratings = []
         for population in populations:
-            sample = random.sample(
-                population, round(len(population)*sample_rate))
+            sample_size = round(len(population) * sample_rate)
+            if sample_size == 0:
+                sample_size = 1
+            sample = random.sample(population, sample_size)
             sample_result = pool.map(play_reference, sample)
             generation_ratings.append(sum(sample_result) / len(sample))
         ratings.append(generation_ratings)
@@ -151,16 +153,17 @@ def trial(title, generation_count, population_sizes, mutation_rate, sexual, samp
             if len(winner_populations[i]) == 0:  # all were eliminated, restart species
                 for _ in range(2):
                     populations[i].append(Bot())
-            for _ in range(len(winner_populations[i]) * 2):
-                if sexual:
-                    parents = [random.choice(
-                        winner_populations[i]), random.choice(winner_populations[i])]
-                    child = Bot(parents=parents)
-                else:
-                    parent = random.choice(winner_populations[i])
-                    child = Bot(genome=parent.genome)
-                child.genome.mutate(mutation_rate)
-                populations[i].append(child)
+            else:
+                for _ in range(len(winner_populations[i]) * 2):
+                    if sexual:
+                        parents = [random.choice(
+                            winner_populations[i]), random.choice(winner_populations[i])]
+                        child = Bot(parents=parents)
+                    else:
+                        parent = random.choice(winner_populations[i])
+                        child = Bot(genome=parent.genome)
+                    child.genome.mutate(mutation_rate)
+                    populations[i].append(child)
     return {"title": title, "bots": populations, "ratings": ratings, "sizes": sizes}
 
 
