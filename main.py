@@ -150,7 +150,8 @@ def trial(title, generation_count, population_sizes, mutation_rate, sexual, samp
 
         for i in range(len(population_sizes)):
             populations[i] = []
-            if len(winner_populations[i]) == 0:  # all were eliminated, restart species
+            # all were eliminated, restart species
+            if len(winner_populations[i]) == 0:
                 for _ in range(2):
                     populations[i].append(Bot())
             else:
@@ -174,7 +175,8 @@ def save_result(results):
     except FileExistsError:
         pass
 
-    pickle.dump(results["bots"], open("results/" + results["title"] + "/bots.p", "wb"))
+    pickle.dump(results["bots"], open(
+        "results/" + results["title"] + "/bots.p", "wb"))
 
     rating_csv = open("results/" + results["title"] + "/ratings.csv", "w")
     sizes_csv = open("results/" + results["title"] + "/sizes.csv", "w")
@@ -199,11 +201,17 @@ def save_result(results):
     rating_csv.close()
     sizes_csv.close()
 
-save_result(trial("control", generation_count=30000, population_sizes=[200], mutation_rate=0.05, sexual=True, sample_rate=0.2))
-save_result(trial("no_mutation", generation_count=30000, population_sizes=[200], mutation_rate=0, sexual=True, sample_rate=0.2))
-save_result(trial("asexual", generation_count=30000, population_sizes=[200], mutation_rate=0.05, sexual=False, sample_rate=0.2))
-save_result(trial("coevolution_2", generation_count=30000, population_sizes=[100, 100], mutation_rate=0.05, sexual=True, sample_rate=0.2))
-save_result(trial("coevolution_4", generation_count=30000, population_sizes=[50, 50, 50, 50], mutation_rate=0.05, sexual=True, sample_rate=0.2))
+
+save_result(trial("control", generation_count=200, population_sizes=[
+            200], mutation_rate=0.05, sexual=True, sample_rate=1))
+save_result(trial("no_mutation", generation_count=200, population_sizes=[
+            200], mutation_rate=0, sexual=True, sample_rate=1))
+save_result(trial("asexual", generation_count=200, population_sizes=[
+            200], mutation_rate=0.05, sexual=False, sample_rate=1))
+save_result(trial("coevolution_2", generation_count=200, population_sizes=[
+            100, 100], mutation_rate=0.05, sexual=True, sample_rate=1))
+save_result(trial("coevolution_4", generation_count=200, population_sizes=[
+            50, 50, 50, 50], mutation_rate=0.05, sexual=True, sample_rate=1))
 
 # result = trial("Test", generation_count=10, population_sizes=[200], mutation_rate=0.05, sexual=True, sample_rate=0.5)
 # pickle.dump(result, open("result.p", "wb"))
