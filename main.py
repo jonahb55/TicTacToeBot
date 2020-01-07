@@ -5,9 +5,9 @@ from bot import Bot
 import random
 import pickle
 import time
-from datetime import datetime
 import math
 from multiprocessing import Pool
+import os
 
 
 class Player:
@@ -22,7 +22,8 @@ class Player:
                   player_symbol)
 
 
-def run_game(player1, player2, debug=False):
+def run_game(player1, player2, tie_randomize=False):
+    """Plays one game and determines the winner (0=p1,1=p2,None=tie)"""
     board = Board()
     players = (player1, player2)
     player_symbols = (Symbol.O, Symbol.X)
@@ -32,12 +33,16 @@ def run_game(player1, player2, debug=False):
         players[turn % 2].play(board, player_symbols[turn % 2])
 
     if board.filled() and board.winner() == None:  # tie
-        return None
+        if tie_randomize:
+            return random.getrandbits(1)
+        else:
+            return None
     else:
         return player_symbols.index(board.winner())
 
 
 def format_duration(duration):
+    """Writes a duration in human readable format."""
     temp_duration = duration
     hours = math.floor(temp_duration/3600)
     temp_duration -= hours*3600
@@ -53,6 +58,7 @@ def format_duration(duration):
 
 
 def print_winner(winner):
+    """Prints a winner in human readable format."""
     if winner == None:
         print("Tie!")
     elif winner == 0:
@@ -60,61 +66,147 @@ def print_winner(winner):
     elif winner == 1:
         print("X wins!")
 
-def play_process(players):
-        result = run_game(players[0], players[1])
-        if result == None:
-            result = random.getrandbits(1)
-        return players[result]
 
-def reproduce_process(parents):
-    child = Bot(parents=parents)
-    child.genome.mutate(mutation_rate)
-    return child
+def play_process(matchup):
+    winner = run_game(matchup[0]["bot"], matchup[1]["bot"], tie_randomize=True)
+    return matchup[winner]
 
-population_size = 200
-generation_count = 35000
-mutation_rate = 0.05
-pool = Pool(128)
 
-def evolve():
-    population = []
-    for _ in range(population_size):
-        population.append(Bot())
+def play_reference(bot):
+    if random.getrandbits(1) == 0:
+        winner = run_game(bot, reference_bot, tie_randomize=True)
+        success = winner == 0
+    else:
+        winner = run_game(reference_bot, bot, tie_randomize=True)
+        success = winner == 1
+    if success:
+        return 1
+    else:
+        return 0
 
-    game_count = 0
-    game_total = population_size * generation_count * 0.5
-    start_time = time.time()
-    for _ in range(generation_count):
+
+# Main code
+reference_genome = Genome(text="Aa-Aa-Aa-Aa-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA")
+reference_bot = Bot(genome=reference_genome)
+pool = Pool(32)
+
+
+def trial(title, generation_count, population_sizes, mutation_rate, sexual, sample_rate):
+    """Runs one trial and returns a list of bots and stats"""
+    # Create starting populations
+    populations = []
+    for size in population_sizes:
+        population = []
+        for _ in range(size):
+            population.append(Bot())
+        populations.append(population)
+
+    ratings = []
+    sizes = []
+    for generation in range(generation_count):
+        # Evaluate generation
+        print(time.strftime("%a %b %-d %-I:%M:%S %p"), "-", title,
+              "- evaluating generation", generation + 1, "of", generation_count)
+
+        sizes.append([len(x) for x in populations])
+
+        generation_ratings = []
+        for population in populations:
+            sample = random.sample(
+                population, round(len(population)*sample_rate))
+            sample_result = pool.map(play_reference, sample)
+            generation_ratings.append(sum(sample_result) / len(sample))
+        ratings.append(generation_ratings)
+
+        # Run generation
+        print(time.strftime("%a %b %-d %-I:%M:%S %p"), "-", title,
+              "- running generation", generation + 1, "of", generation_count)
+
+        full_population = []
+        for i in range(len(populations)):
+            for bot in populations[i]:
+                full_population.append({"bot": bot, "population_number": i})
+        random.shuffle(full_population)
+
         matchups = []
-        while len(population) >= 2:
-            matchups.append([population[0], population[1]])
-            population = population[2:]
+        while len(full_population) >= 2:
+            matchups.append([full_population[0], full_population[1]])
+            full_population = full_population[2:]
 
         winners = pool.map(play_process, matchups)
-        
-        parents = []
-        for _ in range(population_size):
-            parents.append((random.choice(winners), random.choice(winners)))
 
-        population = pool.map(reproduce_process, parents)
+        # Create next generation
+        print(time.strftime("%a %b %-d %-I:%M:%S %p"), "-", title,
+              "- breeding generation", generation + 1, "of", generation_count)
 
-        game_count += population_size / 2
-        game_rate = (time.time() - start_time) / game_count
-        percent = round((game_count / game_total) * 100, 3)
-        etr = round((game_total - game_count) * game_rate)
-        eta = datetime.fromtimestamp(
-            time.time() + etr).strftime("%I:%M %p %a %b %d")
-        print("  " + str(percent) + "%" + " - (ETR=" +
-              format_duration(etr) + "s) - (ETA=" + eta + ")       ", end="\r")
+        winner_populations = []
+        for _ in population_sizes:
+            winner_populations.append([])
+        for winner in winners:
+            winner_populations[winner["population_number"]].append(
+                winner["bot"])
 
-    pickle.dump(population, open("bots.p", "wb"))
-    print()
-    print_winner(run_game(population[0], Player(), debug=True))
+        for i in range(len(population_sizes)):
+            populations[i] = []
+            if len(winner_populations[i]) == 0:  # all were eliminated, restart species
+                for _ in range(2):
+                    populations[i].append(Bot())
+            for _ in range(len(winner_populations[i]) * 2):
+                if sexual:
+                    parents = [random.choice(
+                        winner_populations[i]), random.choice(winner_populations[i])]
+                    child = Bot(parents=parents)
+                else:
+                    parent = random.choice(winner_populations[i])
+                    child = Bot(genome=parent.genome)
+                child.genome.mutate(mutation_rate)
+                populations[i].append(child)
+    return {"title": title, "bots": populations, "ratings": ratings, "sizes": sizes}
 
 
-def read():
-    bot = pickle.load(open("bots.p", "rb"))[0]
-    print_winner(run_game(bot, Player(), debug=True))
+def save_result(results):
+    """Saves results using csv and pickle."""
+    try:
+        os.mkdir("results/" + results["title"])
+    except FileExistsError:
+        pass
 
+    pickle.dump(results["bots"], open("results/" + results["title"] + "/bots.p", "wb"))
 
-evolve()
+    rating_csv = open("results/" + results["title"] + "/ratings.csv", "w")
+    sizes_csv = open("results/" + results["title"] + "/sizes.csv", "w")
+    fields = "Generation"
+    for i in range(len(results["ratings"][0])):
+        fields += ",Population " + str(i + 1)
+    rating_csv.write(fields + "\n")
+    sizes_csv.write(fields + "\n")
+
+    for i in range(len(results["ratings"])):
+        line = str(i + 1)
+        for value in results["ratings"][i]:
+            line += "," + str(value)
+        rating_csv.write(line + "\n")
+
+    for i in range(len(results["sizes"])):
+        line = str(i + 1)
+        for value in results["sizes"][i]:
+            line += "," + str(value)
+        sizes_csv.write(line + "\n")
+
+    rating_csv.close()
+    sizes_csv.close()
+
+save_result(trial("test", generation_count=10, population_sizes=[50], mutation_rate=0.05, sexual=True, sample_rate=0.2))
+save_result(trial("control", generation_count=30000, population_sizes=[200], mutation_rate=0.05, sexual=True, sample_rate=0.2))
+save_result(trial("no_mutation", generation_count=30000, population_sizes=[200], mutation_rate=0, sexual=True, sample_rate=0.2))
+save_result(trial("asexual", generation_count=30000, population_sizes=[200], mutation_rate=0.05, sexual=False, sample_rate=0.2))
+save_result(trial("coevolution_2", generation_count=30000, population_sizes=[100, 100], mutation_rate=0.05, sexual=True, sample_rate=0.2))
+save_result(trial("coevolution_4", generation_count=30000, population_sizes=[50, 50, 50, 50], mutation_rate=0.05, sexual=True, sample_rate=0.2))
+
+# result = trial("Test", generation_count=10, population_sizes=[200], mutation_rate=0.05, sexual=True, sample_rate=0.5)
+# pickle.dump(result, open("result.p", "wb"))
+
+# result = pickle.load(open("result.p", "rb"))
+# print_winner(run_game(result[0][0], Player()))
+
+# print_winner(run_game(reference_bot, Player()))
