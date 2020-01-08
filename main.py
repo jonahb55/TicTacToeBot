@@ -73,16 +73,12 @@ def play_process(matchup):
 
 
 def play_reference(bot):
-    if random.getrandbits(1) == 0:
-        winner = run_game(bot, reference_bot, tie_randomize=True)
-        success = winner == 0
-    else:
-        winner = run_game(reference_bot, bot, tie_randomize=True)
-        success = winner == 1
-    if success:
-        return 1
-    else:
-        return 0
+    wins = 0
+    if run_game(bot, reference_bot, tie_randomize=True) == 0:
+        wins += 1
+    if run_game(reference_bot, bot, tie_randomize=True) == 1:
+        wins += 1
+    return wins
 
 
 # Main code
@@ -119,7 +115,7 @@ def trial(title, generation_count, population_sizes, mutation_rate, sexual, samp
                 sample_size = 1
             sample = random.sample(population, sample_size)
             sample_result = pool.map(play_reference, sample)
-            generation_ratings.append(sum(sample_result) / len(sample))
+            generation_ratings.append(sum(sample_result) / (len(sample) * 2))
         ratings.append(generation_ratings)
 
         # Run generation
@@ -206,7 +202,7 @@ def save_result(results):
 
 save_result(trial("control", generation_count=200, population_sizes=[
             200], mutation_rate=0.05, sexual=True, sample_rate=1))
-save_result(trial("no_mutation", generation_count=400, population_sizes=[
+save_result(trial("no_mutation", generation_count=800, population_sizes=[
             200], mutation_rate=0, sexual=True, sample_rate=1))
 save_result(trial("asexual", generation_count=200, population_sizes=[
             200], mutation_rate=0.05, sexual=False, sample_rate=1))
