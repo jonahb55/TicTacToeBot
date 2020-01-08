@@ -86,7 +86,9 @@ def play_reference(bot):
 
 
 # Main code
-reference_genome = Genome(text="Aa-Aa-Aa-Aa-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA")
+ref_old = "Aa-Aa-Aa-Aa-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA-aa-aa-aa-aa-AA-AA-AA-aa-AA-AA-AA-AA"
+ref_new = "Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-AA-AA-AA-AA-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-Aa-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA-aa-aa-aa-aa-aa-aa-aa-aa-AA-AA-AA-AA"
+reference_genome = Genome(text=ref_new)
 reference_bot = Bot(genome=reference_genome)
 pool = Pool(32)
 
@@ -204,7 +206,7 @@ def save_result(results):
 
 save_result(trial("control", generation_count=200, population_sizes=[
             200], mutation_rate=0.05, sexual=True, sample_rate=1))
-save_result(trial("no_mutation", generation_count=200, population_sizes=[
+save_result(trial("no_mutation", generation_count=400, population_sizes=[
             200], mutation_rate=0, sexual=True, sample_rate=1))
 save_result(trial("asexual", generation_count=200, population_sizes=[
             200], mutation_rate=0.05, sexual=False, sample_rate=1))
